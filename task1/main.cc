@@ -132,20 +132,18 @@ void profile_matrix_times_matrix(int n, OpenCL& opencl) {
     matrix_times_matrix(a, b, expected_result);
     auto t1 = clock_type::now();
     
-    cl::Buffer d_a(opencl.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, a.rows() * a.cols() * sizeof(float), std::begin(a));
-    cl::Buffer d_b(opencl.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, b.rows() * b.cols() * sizeof(float), std::begin(b));
+    cl::Buffer d_a(opencl.queue, std::begin(a), std::end(a), true);
+    cl::Buffer d_b(opencl.queue, std::begin(b), std::end(b), true);
     cl::Buffer d_result(opencl.context, CL_MEM_READ_WRITE, result.rows()*result.cols()*sizeof(float));
     kernel.setArg(0, d_a);
     kernel.setArg(1, d_b);
     kernel.setArg(2, d_result);
 
-    cl::Event event;
     auto t2 = clock_type::now();
-    opencl.queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(n, n), cl::NullRange, nullptr, &event);
+    opencl.queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(n, n), cl::NullRange);
     auto t3 = clock_type::now();
-    event.wait();
 
-    opencl.queue.enqueueReadBuffer(d_result, CL_TRUE, 0, result.rows() * result.cols() * sizeof(float), std::begin(result));
+    cl::copy(opencl.queue, d_result, begin(result), end(result));
     auto t4 = clock_type::now();
 
     verify_matrix(expected_result, result);
