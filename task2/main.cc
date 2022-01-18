@@ -70,7 +70,7 @@ struct OpenCL {
 void profile_reduce(int n, OpenCL& opencl) {
     auto a = random_vector<float>(n);
     Vector<float> result(n), expected_result(n);
-    cl::Kernel kernel1(opencl.program, "reductionVector");
+    cl::Kernel kernel1(opencl.program, "reduction");
     cl::Kernel kernel2(opencl.program, "reductionComplete");
 
     auto t0 = clock_type::now();
